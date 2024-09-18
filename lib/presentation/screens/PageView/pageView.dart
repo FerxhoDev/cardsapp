@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Pageview extends StatelessWidget {
   Pageview({super.key});
@@ -247,7 +248,11 @@ class Pagina3 extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         GestureDetector(
-                          onTap: () {
+                          onTap: () async {
+                            //Guardar preferencia
+                            SharedPreferences prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool('intro_shown', true);
+
                             context.go('/Home');
                           },
                           child: Container(

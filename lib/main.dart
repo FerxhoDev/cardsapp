@@ -3,25 +3,34 @@ import 'package:cardsapps/config/theme/dark_theme.dart';
 import 'package:cardsapps/config/theme/light_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool introShown = prefs.getBool('intro_shown') ?? false;
+
+  runApp(MyApp(introShown: introShown));
+}
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool introShown;
+  const MyApp({super.key, required this.introShown});
 
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-        designSize: const Size(720, 1280),
-        builder: (_, child) {
-          return MaterialApp.router(
-            debugShowCheckedModeBanner: false,
-            theme: lightTheme,
-            darkTheme: darkTheme,
-            themeMode: ThemeMode.system,
-            routerConfig: appRouter,
-            title: 'Cards App',
-          );
-        });
+      designSize: const Size(720, 1280),
+      builder: (_, child) {
+        return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: ThemeMode.system,
+          routerConfig: appRouter(introShown),
+          title: 'Cards App',
+        );
+      },
+    );
   }
 }
