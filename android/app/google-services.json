@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "362645339399",
+    "project_id": "cardsapps-15c61",
+    "storage_bucket": "cardsapps-15c61.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:362645339399:android:ff7f47b4b9451bd7d2d9a2",
+        "android_client_info": {
+          "package_name": "com.example.cardsapps"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlFB5aqDxJ1QLTnYYIkzMale-7yOzO2sU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
