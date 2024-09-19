@@ -8,9 +8,14 @@ class HomePage extends StatelessWidget {
 
   // Método para obtener las categorías desde Firebase
   Future<List<Map<String, dynamic>>> _fetchCategories() async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('categories').get();
-    return querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
-  }
+  QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('categories').get();
+  return querySnapshot.docs.map((doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    data['id'] = doc.id; // Agregar el ID del documento para usarlo en las subcolecciones
+    return data;
+  }).toList();
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -133,13 +138,13 @@ class HomePage extends StatelessWidget {
                                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
-                                        Text(categoria['Nombre'] ?? 'Sin título',
+                                        Text(categoria['nombre'] ?? 'Sin título',
                                             style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold)),
                                         const SizedBox(height: 10),
                                         ElevatedButton(
                                           onPressed: () {
                                             // Navegar a la pantalla de detalles de categoría
-                                            context.go('/categoria/${categoria['id']}');
+                                            context.go('/Home/categoria/${categoria['id']}');
                                           },
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: const Color.fromARGB(255, 239, 148, 94),
