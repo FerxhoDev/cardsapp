@@ -1,3 +1,4 @@
+import 'package:cardsapps/presentation/screens/Home/AddCat.modal.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,14 +7,19 @@ import 'package:go_router/go_router.dart'; // Para la navegación
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  // Método para obtener las categorías desde Firebase
-  Future<List<Map<String, dynamic>>> _fetchCategories() async {
-  QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('categories').get();
-  return querySnapshot.docs.map((doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    data['id'] = doc.id; // Agregar el ID del documento para usarlo en las subcolecciones
-    return data;
-  }).toList();
+  // Método para obtener las categorías desde Firebase usando un stream
+  Stream<List<Map<String, dynamic>>> _streamCategories() {
+  return FirebaseFirestore.instance
+      .collection('categories')
+      .orderBy('timestamp', descending: true) // Ordenar por timestamp
+      .snapshots()
+      .map((snapshot) {
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      data['id'] = doc.id; // Agregar el ID del documento
+      return data;
+    }).toList();
+  });
 }
 
 
@@ -23,8 +29,8 @@ class HomePage extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       body: SafeArea(
         child: SingleChildScrollView(
-          child: FutureBuilder<List<Map<String, dynamic>>>(
-            future: _fetchCategories(),
+          child: StreamBuilder<List<Map<String, dynamic>>>(
+            stream: _streamCategories(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -168,14 +174,23 @@ class HomePage extends StatelessWidget {
                   SizedBox(height: 60.h),
                   Padding(
                     padding: const EdgeInsets.all(20.0),
-                    child: Container(
-                      height: 100.h,
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 239, 148, 94),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Center(
-                        child: Text('Crear nueva tarjeta', style: TextStyle(fontSize: 24, color: Colors.white)),
+                    child: GestureDetector(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context, 
+                          builder: (ctx) => const AddCatmod(),
+                          isScrollControlled: true, 
+                        );
+                      },
+                      child: Container(
+                        height: 100.h,
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 239, 148, 94),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Center(
+                          child: Text('Crear nueva tarjeta', style: TextStyle(fontSize: 24, color: Colors.white)),
+                        ),
                       ),
                     ),
                   )

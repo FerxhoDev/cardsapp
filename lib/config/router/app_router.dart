@@ -1,3 +1,4 @@
+import 'package:cardsapps/presentation/screens/Home/AddCard.modal.dart';
 import 'package:cardsapps/presentation/screens/Home/homescreen.dart';
 import 'package:cardsapps/presentation/screens/PageView/pageView.dart';
 import 'package:cardsapps/presentation/screens/cards/cardsplay.dart';
@@ -37,6 +38,11 @@ GoRouter appRouter(bool introShown) {
             },
           ),
         ]
+      ),
+      GoRoute(
+        path: '/AddCard',
+        name: 'AddCard',
+        builder: (BuildContext context, GoRouterState state) => const AddCardmod(),
       ),
     ],
   );

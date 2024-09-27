@@ -18,7 +18,7 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   final bool introShown;
   const MyApp({super.key, required this.introShown});
-
+         
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(

@@ -36,6 +36,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   go_router: ^14.2.7
   shared_preferences: ^2.3.2
+  slimy_card_plus: ^1.0.5
 
 dev_dependencies:
   flutter_lints: ^3.0.0
