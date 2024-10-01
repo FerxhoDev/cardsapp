@@ -24,7 +24,6 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _searchController.addListener(_onSearchChanged);
     _searchFocusNode.addListener(_onFocusChanged);
-    getClientStream();
   }
 
   _onSearchChanged() {
@@ -53,19 +52,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  getClientStream() async {
-    var data = await FirebaseFirestore.instance
+  // Stream para obtener los datos en tiempo real
+  Stream<QuerySnapshot> getClientStream() {
+    return FirebaseFirestore.instance
         .collection('categories')
-        .orderBy('nombre')
-        .get();
-    setState(() {
-      _allResults = data.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        data['id'] = doc.id;
-        return data;
-      }).toList();
-      _resultsList = List<Map<String, dynamic>>.from(_allResults);
-    });
+        .orderBy('timestamp', descending: true)
+        .snapshots();
   }
 
   @override
@@ -168,86 +160,120 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
-                Container(
-                  height: 400.h,
-                  padding: const EdgeInsets.only(left: 20),
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _resultsList.length,
-                    itemBuilder: (context, index) {
-                      final categoria = _resultsList[index];
-                      return Container(
-                        width: 300.w,
-                        margin: const EdgeInsets.only(right: 16.0),
-                        decoration: BoxDecoration(
-                          color: Colors.teal[(index % 9 + 1) * 100],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              const Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
+                // StreamBuilder para mostrar categorías en tiempo real
+                StreamBuilder<QuerySnapshot>(
+                  stream: getClientStream(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (snapshot.hasError) {
+                      return const Text('Error al cargar categorías');
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return const Text('No hay categorías disponibles');
+                    }
+
+                    // Actualiza la lista _allResults sin usar setState dentro del StreamBuilder
+                    _allResults = snapshot.data!.docs.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      data['id'] = doc.id;
+                      return data;
+                    }).toList();
+
+                    // Filtra los resultados fuera del setState
+                    _resultsList = _searchController.text.isNotEmpty
+                        ? _allResults
+                            .where((element) => element['nombre']
+                                .toString()
+                                .toLowerCase()
+                                .contains(
+                                    _searchController.text.toLowerCase()))
+                            .toList()
+                        : List<Map<String, dynamic>>.from(_allResults);
+
+                    return Container(
+                      height: 400.h,
+                      padding: const EdgeInsets.only(left: 20),
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _resultsList.length,
+                        itemBuilder: (context, index) {
+                          final categoria = _resultsList[index];
+                          return Container(
+                            width: 300.w,
+                            margin: const EdgeInsets.only(right: 16.0),
+                            decoration: BoxDecoration(
+                              color: Colors.teal[(index % 9 + 1) * 100],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
-                                  CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: Colors.white,
-                                    child: Icon(
-                                      Icons.favorite_rounded,
-                                      color: Color.fromARGB(255, 239, 148, 94),
-                                    ),
-                                  ),
-                                  SizedBox(width: 10),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Container(
-                                height: 200.h,
-                                width: 270.w,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Container(
-                                  margin: const EdgeInsets.all(10),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                  const Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      Text(categoria['nombre'] ?? 'Sin título',
-                                          style: TextStyle(
-                                              fontSize: 20.sp,
-                                              fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 10),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          context.go(
-                                              '/Home/categoria/${categoria['id']}');
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color.fromARGB(
-                                              255, 239, 148, 94),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
+                                      CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: Colors.white,
+                                        child: Icon(
+                                          Icons.favorite_rounded,
+                                          color: Color.fromARGB(255, 239, 148, 94),
                                         ),
-                                        child: Text('Ver tarjeta',
-                                            style: TextStyle(
-                                                fontSize: 20.sp,
-                                                color: Colors.white)),
                                       ),
+                                      SizedBox(width: 10),
                                     ],
                                   ),
-                                ),
+                                  const SizedBox(height: 10),
+                                  Container(
+                                    height: 200.h,
+                                    width: 270.w,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Container(
+                                      margin: const EdgeInsets.all(10),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text(categoria['nombre'] ?? 'Sin título',
+                                              style: TextStyle(
+                                                  fontSize: 20.sp,
+                                                  fontWeight: FontWeight.bold)),
+                                          const SizedBox(height: 10),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              context.go('/Home/categoria/${categoria['id']}');
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color.fromARGB(
+                                                  255, 239, 148, 94),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                            child: Text('Ver tarjeta',
+                                                style: TextStyle(
+                                                    fontSize: 20.sp,
+                                                    color: Colors.white)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
                 ),
                 // Espacio extra para que el teclado no cubra el contenido
                 SizedBox(height: 60.h),
@@ -264,12 +290,22 @@ class _HomePageState extends State<HomePage> {
                     child: Container(
                       height: 100.h,
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 239, 148, 94),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Center(
-                        child: Text('Crear nueva tarjeta',
-                            style: TextStyle(fontSize: 24, color: Colors.white)),
+                          color: const Color.fromARGB(255, 239, 148, 94),
+                          borderRadius: BorderRadius.circular(10),
+                          ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('Nueva categoría',
+                                style: TextStyle(
+                                    fontSize: 20.sp,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 10),
+                            const Icon(Icons.add, color: Colors.white)
+                          ],
+                        ),
                       ),
                     ),
                   ),
