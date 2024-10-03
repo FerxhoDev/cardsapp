@@ -1,6 +1,6 @@
-import 'package:cardsapps/presentation/screens/Home/AddCard.modal.dart';
 import 'package:cardsapps/presentation/screens/Home/homescreen.dart';
 import 'package:cardsapps/presentation/screens/PageView/pageView.dart';
+import 'package:cardsapps/presentation/screens/cards/cardsUpdate.dart';
 import 'package:cardsapps/presentation/screens/cards/cardsplay.dart';
 import 'package:cardsapps/presentation/screens/login/login.dart';
 import 'package:flutter/material.dart';
@@ -32,17 +32,22 @@ GoRouter appRouter(bool introShown) {
             builder: (BuildContext context, GoRouterState state) {
               // Accedemos a `id` utilizando `pathParameters` en lugar de `params`
               final String categoriaId = state.pathParameters['id']!;
-              
               // Pasamos el id como argumento a CategoriaDetallesPage
               return CategoriaDetallesPage(categoriaId: categoriaId);
             },
           ),
+          GoRoute(
+            path: 'updateCategoria/:categoriaId/:cardId', // Ruta con parámetros categoriaId y cardId
+            name: 'updateCategoria',
+            builder: (BuildContext context, GoRouterState state) {
+              // Extraemos los parámetros utilizando `pathParameters`
+              final String categoriaId = state.pathParameters['categoriaId']!;
+              final String cardId = state.pathParameters['cardId']!;
+              // Pasamos ambos parámetros al widget CardsUpdate
+              return CardsUpdate(categoriaId: categoriaId, cardId: cardId);
+            },
+          ),
         ]
-      ),
-      GoRoute(
-        path: '/AddCard',
-        name: 'AddCard',
-        builder: (BuildContext context, GoRouterState state) => const AddCardmod(),
       ),
     ],
   );

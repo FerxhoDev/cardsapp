@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/widgets.dart';
+import 'package:go_router/go_router.dart';
 import 'package:slimy_card_plus/slimy_card.dart';
 
 class CategoriaDetallesPage extends StatefulWidget {
@@ -14,7 +16,8 @@ class CategoriaDetallesPage extends StatefulWidget {
 
 class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
   late Timer _timer;
-  ValueNotifier<int> _seconds = ValueNotifier<int>(0); // Tiempo transcurrido en segundos con ValueNotifier
+  ValueNotifier<int> _seconds = ValueNotifier<int>(
+      0); // Tiempo transcurrido en segundos con ValueNotifier
 
   @override
   void initState() {
@@ -42,10 +45,14 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
         .collection('cards') // Nombre de la subcolección
         .get();
 
-    // Convierte los documentos en una lista de Mapas
-    return querySnapshot.docs
-        .map((doc) => doc.data() as Map<String, dynamic>)
-        .toList();
+    // Convierte los documentos en una lista de Mapas, incluyendo el ID del documento
+  return querySnapshot.docs.map((doc) {
+    // Extrae los datos del documento
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    // Añade manualmente el ID del documento al mapa de datos
+    data['id'] = doc.id;
+    return data;
+  }).toList();
   }
 
   // Método para formatear el tiempo en minutos y segundos
@@ -64,7 +71,8 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
 
     // Asegúrate de que el documento tenga el campo 'nombre'
     final data = docSnapshot.data() as Map<String, dynamic>?;
-    return data?['nombre'] ?? 'Sin nombre'; // Devolver un nombre predeterminado si no existe
+    return data?['nombre'] ??
+        'Sin nombre'; // Devolver un nombre predeterminado si no existe
   }
 
   @override
@@ -93,9 +101,11 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return const Center(child: Text('Error al cargar los detalles de la categoría'));
+            return const Center(
+                child: Text('Error al cargar los detalles de la categoría'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No se encontraron tarjetas para esta categoría'));
+            return const Center(
+                child: Text('No se encontraron tarjetas para esta categoría'));
           }
 
           // Lista de tarjetas obtenida de la subcolección 'cards'
@@ -160,17 +170,25 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
                         padding: const EdgeInsets.all(8.0),
                         child: SlimyCard(
                           topCardWidget: Padding(
-                            padding: const EdgeInsets.only(top: 5, left: 18, right: 8),
+                            padding: const EdgeInsets.only(
+                                top: 5, left: 18, right: 8),
                             child: Column(
                               children: [
-                                const Row(
+                                Row(
                                   children: [
-                                    Spacer(),
-                                    CircleAvatar(
-                                      radius: 20,
-                                      backgroundColor: Colors.white,
-                                      child: Icon(Icons.article_outlined,
-                                          color: Color.fromARGB(255, 239, 148, 94)),
+                                    const Spacer(),
+                                    GestureDetector(
+                                      onTap: () {
+                                        // Navegamos pasando tanto categoriaId como cardId en la ruta
+                                        context.go('/Home/updateCategoria/${widget.categoriaId}/${card['id']}'); 
+                                      },
+                                      child: const CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: Colors.white,
+                                        child: Icon(Icons.border_color_rounded,
+                                            color: Color.fromARGB(
+                                                255, 239, 148, 94)),
+                                      ),
                                     ),
                                     SizedBox(width: 10),
                                   ],
@@ -185,7 +203,8 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
                           ),
                           bottomCardWidget: Text(
                             card['titulo'] ?? 'Sin título',
-                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                           color: const Color(0xFFF2F0EB),
                         ),
