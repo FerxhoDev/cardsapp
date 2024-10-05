@@ -1,75 +1,18 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sign_in_button/sign_in_button.dart';
 
 
-class Login extends StatefulWidget {
-  const Login({super.key});
+class Signin extends StatefulWidget {
+  const Signin({super.key});
 
   @override
-  State<Login> createState() => _LoginState();
+  State<Signin> createState() => _LoginState();
 }
 
-class _LoginState extends State<Login> {
-  //LÑogin con Google
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  User? user;
-
-  //Login con Correo y Contraseña
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-
-  Future signIn() async {
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text, password: _passwordController.text);
-      context.go('/home');
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Inicio de sesión correcto.'),
-          ),
-        );
-      //GoRouter.of(context).go('/home');
-    } on FirebaseAuthException catch (e) { 
-      if (e.code == 'user-not-found') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No hay usuario para este correo.'),
-          ),
-        );
-      } else if (e.code == 'wrong-password') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Contraseña incorrecta.'),
-          ),
-        );
-      }
-    }
-  }
-
-
-  @override
-  void initState() {
-    super.initState();
-    _auth.authStateChanges().listen((event) {
-      setState(() {
-        user = event;
-      });
-      if (user != null) {
-        context.go('/home');
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
+class _LoginState extends State<Signin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,10 +30,7 @@ class _LoginState extends State<Login> {
               ),
             ),
             child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
+              child: Text(
                     'Bienvenido',
                     style: TextStyle(
                       fontSize: 50.sp,
@@ -98,16 +38,6 @@ class _LoginState extends State<Login> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Text(
-                    'De nuevo!',
-                    style: TextStyle(
-                      fontSize: 40.sp,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
           Expanded(child: Container(
@@ -122,7 +52,7 @@ class _LoginState extends State<Login> {
             child: Container(
               padding: EdgeInsets.all(40.w),
               decoration: BoxDecoration(
-                color: Color.fromARGB(255, 253, 251, 251),
+                color: const Color.fromARGB(255, 253, 251, 251),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -137,9 +67,17 @@ class _LoginState extends State<Login> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Nombre',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
                     // Campo de texto para el correo
                     TextField(
-                      controller: _emailController,
                       decoration: InputDecoration(
                         labelText: 'Correo electrónico',
                         border: OutlineInputBorder(
@@ -151,7 +89,6 @@ class _LoginState extends State<Login> {
                 
                     // Campo de texto para la contraseña
                     TextField(
-                      controller: _passwordController,
                       obscureText: true, // Oculta la contraseña
                       decoration: InputDecoration(
                         labelText: 'Contraseña',
@@ -170,7 +107,7 @@ class _LoginState extends State<Login> {
                             color: Colors.teal[200],
                             child: InkWell(
                               onTap: () {
-                                signIn();
+                                // signIn();
                               },
                               child: Padding(
                                 padding: EdgeInsets.symmetric(
@@ -204,16 +141,16 @@ class _LoginState extends State<Login> {
                 
                     SizedBox(height: 50.h), 
                     
-                    GestureDetector(
-                      onTap: () {
-                        context.goNamed('signIn');
-                      },
-                      child: const Row(
-                        children: [
-                          Text('Crearme una cuenta', style: TextStyle(color: Colors.grey),),
-                          Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey, size: 20, ),
-                        ],
-                      ),
+                    Row(
+                      children: [
+                        const Text('Ya tienes una cuenta?', style: TextStyle(color: Colors.grey),),
+                        SizedBox(width: 10.w),
+                        GestureDetector(
+                          onTap: () {
+                            context.goNamed('login');
+                          },
+                          child: const Text('Inicia Sesión', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),)),
+                      ],
                     ),// Espacio entre botones
                   ],
                 ),

@@ -1,5 +1,6 @@
 import 'package:cardsapps/presentation/screens/Home/AddCat.modal.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,6 +20,8 @@ class _HomePageState extends State<HomePage> {
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchFocused = false;
 
+  final User? user = FirebaseAuth.instance.currentUser;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   @override
   void initState() {
     super.initState();
@@ -39,17 +42,39 @@ class _HomePageState extends State<HomePage> {
   searchResultList() {
     var showResults = <Map<String, dynamic>>[];
     if (_searchController.text.isNotEmpty) {
-      showResults = _allResults.where((element) =>
-          element['nombre']
+      showResults = _allResults
+          .where((element) => element['nombre']
               .toString()
               .toLowerCase()
-              .contains(_searchController.text.toLowerCase())).toList();
+              .contains(_searchController.text.toLowerCase()))
+          .toList();
     } else {
       showResults = List<Map<String, dynamic>>.from(_allResults);
     }
     setState(() {
       _resultsList = showResults;
     });
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    try {
+      await _auth.signOut(); // Cierra la sesión de Firebase
+
+      // Después de cerrar sesión, redirige al login
+      context.go('/Home/login');
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cerro de sesión correctamente.'),
+          ),
+        );
+    } catch (e) {
+      // Manejo de errores
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cerrar sesión: $e'),
+        ),
+      );
+    }
   }
 
   // Stream para obtener los datos en tiempo real
@@ -69,6 +94,33 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  void _showLoginDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Iniciar sesión'),
+          content: Text('Para agregar nuevas tarjetas debes iniciar sesión.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                // Acción al confirmar el login
+                context.go('/Home/login');
+              },
+              child: const Text('Iniciar sesión'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cerrar el diálogo
+              },
+              child: const Text('Cancelar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,7 +136,10 @@ class _HomePageState extends State<HomePage> {
               children: [
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
-                  height: _isSearchFocused ? 0 : 170.h, // Ajusta la altura cuando el foco está en el campo de búsqueda
+                  height: _isSearchFocused
+                      ? 0
+                      : 170
+                          .h, // Ajusta la altura cuando el foco está en el campo de búsqueda
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Row(
@@ -100,16 +155,25 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         const Spacer(),
-                        const Icon(Icons.notifications, color: Colors.grey),
+                        IconButton(
+                          onPressed: () async {
+                          await _logout(context);  // Llama a la función de logout de manera correcta
+                        },
+                          icon: const Icon(Icons.logout_rounded),
+                        ),
                       ],
                     ),
                   ),
                 ),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
-                  height: _isSearchFocused ? 0 : 100.h, // Ajusta la altura cuando el foco está en el campo de búsqueda
+                  height: _isSearchFocused
+                      ? 0
+                      : 100
+                          .h, // Ajusta la altura cuando el foco está en el campo de búsqueda
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
@@ -145,7 +209,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                  padding:
+                      const EdgeInsets.only(left: 20, right: 20, bottom: 20),
                   child: Row(
                     children: [
                       Text('Categorías',
@@ -189,8 +254,7 @@ class _HomePageState extends State<HomePage> {
                             .where((element) => element['nombre']
                                 .toString()
                                 .toLowerCase()
-                                .contains(
-                                    _searchController.text.toLowerCase()))
+                                .contains(_searchController.text.toLowerCase()))
                             .toList()
                         : List<Map<String, dynamic>>.from(_allResults);
 
@@ -211,7 +275,8 @@ class _HomePageState extends State<HomePage> {
                             ),
                             child: Center(
                               child: Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
                                 children: [
                                   const Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
@@ -221,7 +286,8 @@ class _HomePageState extends State<HomePage> {
                                         backgroundColor: Colors.white,
                                         child: Icon(
                                           Icons.favorite_rounded,
-                                          color: Color.fromARGB(255, 239, 148, 94),
+                                          color:
+                                              Color.fromARGB(255, 239, 148, 94),
                                         ),
                                       ),
                                       SizedBox(width: 10),
@@ -238,23 +304,30 @@ class _HomePageState extends State<HomePage> {
                                     child: Container(
                                       margin: const EdgeInsets.all(10),
                                       child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceAround,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
                                         children: [
-                                          Text(categoria['nombre'] ?? 'Sin título',
+                                          Text(
+                                              categoria['nombre'] ??
+                                                  'Sin título',
                                               style: TextStyle(
                                                   fontSize: 20.sp,
                                                   fontWeight: FontWeight.bold)),
                                           const SizedBox(height: 10),
                                           ElevatedButton(
                                             onPressed: () {
-                                              context.go('/Home/categoria/${categoria['id']}');
+                                              context.go(
+                                                  '/Home/categoria/${categoria['id']}');
                                             },
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color.fromARGB(
-                                                  255, 239, 148, 94),
+                                              backgroundColor:
+                                                  const Color.fromARGB(
+                                                      255, 239, 148, 94),
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(10),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
                                               ),
                                             ),
                                             child: Text('Ver tarjeta',
@@ -281,18 +354,22 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.all(20.0),
                   child: GestureDetector(
                     onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        builder: (ctx) => const AddCatmod(),
-                        isScrollControlled: true,
-                      );
+                      if (user == null) {
+                        _showLoginDialog(context);
+                      } else {
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (ctx) => const AddCatmod(),
+                          isScrollControlled: true,
+                        );
+                      }
                     },
                     child: Container(
                       height: 100.h,
                       decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 239, 148, 94),
-                          borderRadius: BorderRadius.circular(10),
-                          ),
+                        color: const Color.fromARGB(255, 239, 148, 94),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       child: Center(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,

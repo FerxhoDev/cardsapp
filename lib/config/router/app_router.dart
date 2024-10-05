@@ -3,6 +3,7 @@ import 'package:cardsapps/presentation/screens/PageView/pageView.dart';
 import 'package:cardsapps/presentation/screens/cards/cardsUpdate.dart';
 import 'package:cardsapps/presentation/screens/cards/cardsplay.dart';
 import 'package:cardsapps/presentation/screens/login/login.dart';
+import 'package:cardsapps/presentation/screens/signIn/signIn.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -16,16 +17,24 @@ GoRouter appRouter(bool introShown) {
         builder: (BuildContext context, GoRouterState state) => Pageview(),
       ),
       GoRoute(
-        path: '/login',
-        name: 'login',
-        builder: (BuildContext context, GoRouterState state) => const Login(),
-      ),
-      GoRoute(
         path: '/Home',
         name: 'Home',
         builder: (BuildContext context, GoRouterState state) => const HomePage(),
 
         routes: <RouteBase>[
+          GoRoute(
+            path: 'login',
+            name: 'login',
+           builder: (BuildContext context, GoRouterState state) => const Login(),
+
+           routes: <RouteBase>[
+            GoRoute(
+              path: 'signIn',
+              name: 'signIn',
+              builder: (BuildContext context, GoRouterState state) => const Signin(),
+            ),
+           ]
+          ),
           GoRoute(
             path: 'categoria/:id', // Ruta con parámetro `id`
             name: 'categoriaDetalles',
