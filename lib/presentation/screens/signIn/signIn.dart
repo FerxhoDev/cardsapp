@@ -1,8 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sign_in_button/sign_in_button.dart';
 
 
 class Signin extends StatefulWidget {
@@ -13,6 +14,54 @@ class Signin extends StatefulWidget {
 }
 
 class _LoginState extends State<Signin> {
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+
+
+   // Función para registrar un nuevo usuario
+  Future<void> _register() async {
+  try {
+    // Registrar un nuevo usuario
+    UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+
+    // Actualizar el nombre de usuario
+    await userCredential.user!.updateDisplayName(_nameController.text.trim());
+
+    // Recargar la información del usuario para asegurarte de que se reflejan los cambios
+    await userCredential.user!.reload();
+    User? updatedUser = _auth.currentUser;
+
+    // Guardar el nombre de usuario y correo en Firestore
+    await FirebaseFirestore.instance.collection('users').doc(updatedUser!.uid).set({
+      'name': _nameController.text.trim(),
+      'email': _emailController.text.trim(),
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registro exitoso')),
+      );
+    }
+
+    // Redirigir a la pantalla de Home
+    context.go('/Home/');
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al registrarse: $e')),
+      );
+    }
+  }
+}
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,6 +117,7 @@ class _LoginState extends State<Signin> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     TextField(
+                      controller: _nameController,
                       decoration: InputDecoration(
                         labelText: 'Nombre',
                         border: OutlineInputBorder(
@@ -78,6 +128,7 @@ class _LoginState extends State<Signin> {
                     SizedBox(height: 20.h),
                     // Campo de texto para el correo
                     TextField(
+                      controller: _emailController,
                       decoration: InputDecoration(
                         labelText: 'Correo electrónico',
                         border: OutlineInputBorder(
@@ -89,6 +140,7 @@ class _LoginState extends State<Signin> {
                 
                     // Campo de texto para la contraseña
                     TextField(
+                      controller: _passwordController,
                       obscureText: true, // Oculta la contraseña
                       decoration: InputDecoration(
                         labelText: 'Contraseña',
@@ -107,7 +159,7 @@ class _LoginState extends State<Signin> {
                             color: Colors.teal[200],
                             child: InkWell(
                               onTap: () {
-                                // signIn();
+                                _register();
                               },
                               child: Padding(
                                 padding: EdgeInsets.symmetric(
@@ -133,11 +185,6 @@ class _LoginState extends State<Signin> {
                     SizedBox(height: 40.h), // Espacio antes del botón
 
                     // Botón para iniciar sesión con Google
-                    SignInButton(
-                        Buttons.google,
-                        text: 'Iniciar con Google',
-                        onPressed: () {},
-                      ),
                 
                     SizedBox(height: 50.h), 
                     

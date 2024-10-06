@@ -20,13 +20,24 @@ class _HomePageState extends State<HomePage> {
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchFocused = false;
 
-  final User? user = FirebaseAuth.instance.currentUser;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  //final User? user = FirebaseAuth.instance.currentUser;
+  //final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  User? user;
+  String? userName;
+
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
     _searchFocusNode.addListener(_onFocusChanged);
+    // Escucha los cambios de autenticación
+  FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    setState(() {
+      this.user = user; // Actualiza el usuario
+      _updateUserName(); // Llama a la función para obtener el nombre
+    });
+  });
   }
 
   _onSearchChanged() {
@@ -57,16 +68,25 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _logout(BuildContext context) async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No hay ningún usuario logueado.'),
+        ),
+      );
+      return; // Salir de la función si no hay usuario logueado
+    }
+
     try {
-      await _auth.signOut(); // Cierra la sesión de Firebase
+      await FirebaseAuth.instance.signOut(); // Cierra la sesión de Firebase
 
       // Después de cerrar sesión, redirige al login
       context.go('/Home/login');
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cerro de sesión correctamente.'),
-          ),
-        );
+        const SnackBar(
+          content: Text('Sesión cerrada correctamente.'),
+        ),
+      );
     } catch (e) {
       // Manejo de errores
       ScaffoldMessenger.of(context).showSnackBar(
@@ -77,6 +97,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+
   // Stream para obtener los datos en tiempo real
   Stream<QuerySnapshot> getClientStream() {
     return FirebaseFirestore.instance
@@ -84,6 +105,36 @@ class _HomePageState extends State<HomePage> {
         .orderBy('timestamp', descending: true)
         .snapshots();
   }
+
+
+// Función para actualizar el nombre de usuario
+Future<void> _updateUserName() async {
+  if (user != null) {
+    String? name = await getUserName(); // Espera el nombre del usuario
+    setState(() {
+      userName = name; // Actualiza el estado con el nombre del usuario
+    });
+  } else {
+    setState(() {
+      userName = null; // Si no hay usuario, establece el nombre a null
+    });
+  }
+}
+
+Future<String?> getUserName() async {
+  if (user == null) return null; // Si no hay usuario, retorna null
+  DocumentSnapshot userDoc = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(user!.uid)
+      .get();
+
+  if (userDoc.exists && userDoc.data() != null) {
+    var data = userDoc.data() as Map<String, dynamic>;
+    return data.containsKey('name') ? data['name'] : 'Usuario';
+  }
+  
+  return 'Usuario'; // Si no hay un nombre, usa un valor por defecto
+}
 
   @override
   void dispose() {
@@ -106,6 +157,7 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 // Acción al confirmar el login
                 context.go('/Home/login');
+                Navigator.pop(context); // Cerrar el diálogo
               },
               child: const Text('Iniciar sesión'),
             ),
@@ -148,10 +200,26 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Hola,', style: TextStyle(fontSize: 20.sp)),
-                            Text('Luis 👋',
-                                style: TextStyle(
-                                    fontSize: 40.sp,
-                                    fontWeight: FontWeight.bold)),
+                            FutureBuilder<String?>(
+                              future: getUserName(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Text('Cargando...');
+                                }
+                                return Text(
+                                  snapshot.data != null
+                                      ? '${snapshot.data} 👋'
+                                      : 'Usuario 👋',
+                                  style: TextStyle(
+                                      fontSize: 40.sp,
+                                      fontWeight: FontWeight.bold),
+                                );
+                              },
+                            ),
+                            /*Text(userName != null ? '$userName 👋' : 'Usuario 👋',
+                              style: TextStyle(fontSize: 40.sp, fontWeight: FontWeight.bold)
+                            ),*/
                           ],
                         ),
                         const Spacer(),
