@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -12,6 +13,8 @@ class AddCatmod extends StatefulWidget {
 class _AddCatmodState extends State<AddCatmod> {
   bool _isCategoryCreated = false;
   String? _categoryId;
+  
+  User? user = FirebaseAuth.instance.currentUser;
 
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _cardTitleController = TextEditingController();
@@ -19,51 +22,58 @@ class _AddCatmodState extends State<AddCatmod> {
 
   // Método para crear una categoría en Firebase y obtener su ID
   Future<void> _createCategory() async {
-    if (_categoryController.text.isEmpty) return;
+  if (_categoryController.text.isEmpty || user == null) return;
 
-    DocumentReference docRef =
-        await FirebaseFirestore.instance.collection('categories').add({
-      'nombre': _categoryController.text,
-      'timestamp': FieldValue.serverTimestamp(),
-      // Otros campos
-    });
-    //mostrar mensaje de que se creo la categoria
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+  // Crear la referencia al documento del usuario logueado
+  DocumentReference userDocRef = FirebaseFirestore.instance.collection('users').doc(user!.uid);
+
+  // Crear la categoría en la subcolección 'categories' del usuario
+  DocumentReference docRef = await userDocRef.collection('categories').add({
+    'nombre': _categoryController.text,
+    'timestamp': FieldValue.serverTimestamp(),
+    // Otros campos que desees agregar
+  });
+
+  // Mostrar mensaje de que se creó la categoría
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
       content: Text('Categoría creada con éxito'),
-      ),
-    );
+    ),
+  );
 
-    setState(() {
-      _isCategoryCreated = true;
-      _categoryId = docRef.id; // Almacena el ID de la categoría creada
-    });
-  }
+  setState(() {
+    _isCategoryCreated = true;
+    _categoryId = docRef.id; // Almacena el ID de la categoría creada
+  });
+}
 
 // Método para agregar una tarjeta a la subcolección de la categoría
   Future<void> _addCardToCategory() async {
-    if (_cardTitleController.text.isEmpty ||
-        _detalleTitleController.text.isEmpty ||
-        _categoryId == null) return;
+  if (_cardTitleController.text.isEmpty ||
+      _detalleTitleController.text.isEmpty ||
+      _categoryId == null) return;
 
-    try {
-      await FirebaseFirestore.instance
-          .collection('categories')
-          .doc(_categoryId)
-          .collection('cards')
-          .add({
-        'titulo': _cardTitleController.text,
-        'detalle': _detalleTitleController.text,
-        // Otros campos para la tarjeta
-      });
+  try {
+    // Agregar la tarjeta a la subcolección 'cards' de la categoría del usuario
+    await FirebaseFirestore.instance
+        .collection('users') // Cambiar a 'users'
+        .doc(user!.uid) // Usar el UID del usuario
+        .collection('categories') // Ir a la subcolección de categorías
+        .doc(_categoryId) // Usar el ID de la categoría creada
+        .collection('cards')
+        .add({
+      'titulo': _cardTitleController.text,
+      'detalle': _detalleTitleController.text,
+      // Otros campos para la tarjeta
+    });
 
-      Navigator.pop(context);
-      print(
-          'Tarjeta agregada con exito'); // Cierra el modal después de agregar la tarjeta
-    } catch (e) {
-      print('Error al agregar la tarjeta: $e');
-    }
+    Navigator.pop(context);
+    print('Tarjeta agregada con éxito'); // Cierra el modal después de agregar la tarjeta
+  } catch (e) {
+    print('Error al agregar la tarjeta: $e');
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

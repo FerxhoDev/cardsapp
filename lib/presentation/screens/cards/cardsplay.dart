@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
@@ -15,6 +16,8 @@ class CategoriaDetallesPage extends StatefulWidget {
 }
 
 class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
+
+  User user = FirebaseAuth.instance.currentUser!; // Usuario actual
   late Timer _timer;
   ValueNotifier<int> _seconds = ValueNotifier<int>(
       0); // Tiempo transcurrido en segundos con ValueNotifier
@@ -38,14 +41,16 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
 
   // Método para obtener las tarjetas de la subcolección 'cards'
   Future<List<Map<String, dynamic>>> _fetchCategoriaCards() async {
-    // Accede a la subcolección 'cards' dentro del documento de la categoría seleccionada
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-        .collection('categories')
-        .doc(widget.categoriaId)
-        .collection('cards') // Nombre de la subcolección
-        .get();
+  // Accede a la subcolección 'cards' dentro del documento de la categoría seleccionada
+  QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+      .collection('users') // Colección de usuarios
+      .doc(user!.uid) // Usa el UID del usuario
+      .collection('categories') // Subcolección de categorías del usuario
+      .doc(widget.categoriaId) // Documento de la categoría seleccionada
+      .collection('cards') // Nombre de la subcolección
+      .get();
 
-    // Convierte los documentos en una lista de Mapas, incluyendo el ID del documento
+  // Convierte los documentos en una lista de Mapas, incluyendo el ID del documento
   return querySnapshot.docs.map((doc) {
     // Extrae los datos del documento
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -53,7 +58,7 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
     data['id'] = doc.id;
     return data;
   }).toList();
-  }
+}
 
   // Método para formatear el tiempo en minutos y segundos
   String _formatTime(int seconds) {

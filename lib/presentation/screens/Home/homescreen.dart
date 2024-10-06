@@ -97,14 +97,33 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // Stream para obtener las categorías del usuario logueado
+// Stream para obtener las categorías del usuario autenticado
+Stream<QuerySnapshot> getClientStream() {
+  // Obtén el usuario actual
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
+  if (currentUser == null) {
+    // Si no hay un usuario logueado, devuelve un stream vacío
+    return Stream.empty();
+  }
+
+  // Accede a Firestore usando el ID del usuario
+  return FirebaseFirestore.instance
+      .collection('users') // Colección de usuarios
+      .doc(currentUser.uid) // Usa el ID del usuario
+      .collection('categories') // Subcolección de categorías del usuario
+      .orderBy('timestamp', descending: true) // Ordena por timestamp
+      .snapshots(); // Escucha los cambios en tiempo real
+}
 
   // Stream para obtener los datos en tiempo real
-  Stream<QuerySnapshot> getClientStream() {
+  /*Stream<QuerySnapshot> getClientStream() {
     return FirebaseFirestore.instance
         .collection('categories')
         .orderBy('timestamp', descending: true)
         .snapshots();
-  }
+  }*/
 
 
 // Función para actualizar el nombre de usuario
