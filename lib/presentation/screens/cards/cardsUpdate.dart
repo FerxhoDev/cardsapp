@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,6 +17,7 @@ class _CardsUpdateState extends State<CardsUpdate> {
   late TextEditingController _tituloController;
   late TextEditingController _detalleController;
 
+User user = FirebaseAuth.instance.currentUser!; // Usuario actual
   var _counterDetalle = "";
 
   @override
@@ -30,8 +32,10 @@ class _CardsUpdateState extends State<CardsUpdate> {
     try {
       // Acceder al documento de la tarjeta dentro de la subcolección 'cards'
       DocumentSnapshot cardSnapshot = await FirebaseFirestore.instance
-          .collection('categories')
-          .doc(widget.categoriaId) // Document de la categoría
+          .collection('users') // Colección de usuarios
+          .doc(user!.uid) // ID del usuario
+          .collection('categories') // Subcolección de categorías
+          .doc(widget.categoriaId) // Documento de la categoría
           .collection('cards') // Subcolección 'cards'
           .doc(widget.cardId) // Documento de la tarjeta
           .get();
@@ -43,9 +47,16 @@ class _CardsUpdateState extends State<CardsUpdate> {
           _tituloController.text = data['titulo'] ?? '';
           _detalleController.text = data['detalle'] ?? '';
         });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tarjeta no encontrada')),
+        );
       }
     } catch (e) {
       print('Error al obtener datos de la tarjeta: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al cargar datos de la tarjeta')),
+      );
     }
   }
 
@@ -53,6 +64,8 @@ class _CardsUpdateState extends State<CardsUpdate> {
     try {
       // Actualizar los datos de la tarjeta en Firestore
       await FirebaseFirestore.instance
+          .collection('users') // Colección de usuarios
+          .doc(user!.uid) // ID del usuario
           .collection('categories')
           .doc(widget.categoriaId)
           .collection('cards')
