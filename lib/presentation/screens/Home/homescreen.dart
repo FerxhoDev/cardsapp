@@ -32,12 +32,12 @@ class _HomePageState extends State<HomePage> {
     _searchController.addListener(_onSearchChanged);
     _searchFocusNode.addListener(_onFocusChanged);
     // Escucha los cambios de autenticación
-  FirebaseAuth.instance.authStateChanges().listen((User? user) {
-    setState(() {
-      this.user = user; // Actualiza el usuario
-      _updateUserName(); // Llama a la función para obtener el nombre
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      setState(() {
+        this.user = user; // Actualiza el usuario
+        _updateUserName(); // Llama a la función para obtener el nombre
+      });
     });
-  });
   }
 
   _onSearchChanged() {
@@ -99,23 +99,23 @@ class _HomePageState extends State<HomePage> {
 
   // Stream para obtener las categorías del usuario logueado
 // Stream para obtener las categorías del usuario autenticado
-Stream<QuerySnapshot> getClientStream() {
-  // Obtén el usuario actual
-  User? currentUser = FirebaseAuth.instance.currentUser;
+  Stream<QuerySnapshot> getClientStream() {
+    // Obtén el usuario actual
+    User? currentUser = FirebaseAuth.instance.currentUser;
 
-  if (currentUser == null) {
-    // Si no hay un usuario logueado, devuelve un stream vacío
-    return Stream.empty();
+    if (currentUser == null) {
+      // Si no hay un usuario logueado, devuelve un stream vacío
+      return Stream.empty();
+    }
+
+    // Accede a Firestore usando el ID del usuario
+    return FirebaseFirestore.instance
+        .collection('users') // Colección de usuarios
+        .doc(currentUser.uid) // Usa el ID del usuario
+        .collection('categories') // Subcolección de categorías del usuario
+        .orderBy('timestamp', descending: true) // Ordena por timestamp
+        .snapshots(); // Escucha los cambios en tiempo real
   }
-
-  // Accede a Firestore usando el ID del usuario
-  return FirebaseFirestore.instance
-      .collection('users') // Colección de usuarios
-      .doc(currentUser.uid) // Usa el ID del usuario
-      .collection('categories') // Subcolección de categorías del usuario
-      .orderBy('timestamp', descending: true) // Ordena por timestamp
-      .snapshots(); // Escucha los cambios en tiempo real
-}
 
   // Stream para obtener los datos en tiempo real
   /*Stream<QuerySnapshot> getClientStream() {
@@ -125,35 +125,34 @@ Stream<QuerySnapshot> getClientStream() {
         .snapshots();
   }*/
 
-
 // Función para actualizar el nombre de usuario
-Future<void> _updateUserName() async {
-  if (user != null) {
-    String? name = await getUserName(); // Espera el nombre del usuario
-    setState(() {
-      userName = name; // Actualiza el estado con el nombre del usuario
-    });
-  } else {
-    setState(() {
-      userName = null; // Si no hay usuario, establece el nombre a null
-    });
+  Future<void> _updateUserName() async {
+    if (user != null) {
+      String? name = await getUserName(); // Espera el nombre del usuario
+      setState(() {
+        userName = name; // Actualiza el estado con el nombre del usuario
+      });
+    } else {
+      setState(() {
+        userName = null; // Si no hay usuario, establece el nombre a null
+      });
+    }
   }
-}
 
-Future<String?> getUserName() async {
-  if (user == null) return null; // Si no hay usuario, retorna null
-  DocumentSnapshot userDoc = await FirebaseFirestore.instance
-      .collection('users')
-      .doc(user!.uid)
-      .get();
+  Future<String?> getUserName() async {
+    if (user == null) return null; // Si no hay usuario, retorna null
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .get();
 
-  if (userDoc.exists && userDoc.data() != null) {
-    var data = userDoc.data() as Map<String, dynamic>;
-    return data.containsKey('name') ? data['name'] : 'Usuario';
+    if (userDoc.exists && userDoc.data() != null) {
+      var data = userDoc.data() as Map<String, dynamic>;
+      return data.containsKey('name') ? data['name'] : 'Usuario';
+    }
+
+    return 'Usuario'; // Si no hay un nombre, usa un valor por defecto
   }
-  
-  return 'Usuario'; // Si no hay un nombre, usa un valor por defecto
-}
 
   @override
   void dispose() {
@@ -244,8 +243,9 @@ Future<String?> getUserName() async {
                         const Spacer(),
                         IconButton(
                           onPressed: () async {
-                          await _logout(context);  // Llama a la función de logout de manera correcta
-                        },
+                            await _logout(
+                                context); // Llama a la función de logout de manera correcta
+                          },
                           icon: const Icon(Icons.logout_rounded),
                         ),
                       ],
@@ -365,19 +365,54 @@ Future<String?> getUserName() async {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceAround,
                                 children: [
-                                  const Row(
+                                  Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      CircleAvatar(
-                                        radius: 20,
-                                        backgroundColor: Colors.white,
-                                        child: Icon(
-                                          Icons.favorite_rounded,
-                                          color:
-                                              Color.fromARGB(255, 239, 148, 94),
+                                      GestureDetector(
+                                        onTap: () {
+                                          showDialog(
+                                              context: context,
+                                              builder: (BuildContext context){
+                                                return AlertDialog(
+                                                  title: const Text(
+                                                    'Eliminar categoría'),
+                                                    content: const Text(
+                                                      '¿Estás seguro de eliminar la categoría?'),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: const Text('Cancelar'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                    FirebaseFirestore.instance
+                                                        .collection('users')
+                                                        .doc(user!.uid)
+                                                        .collection(
+                                                            'categories')
+                                                        .doc(categoria['id'])
+                                                        .delete();
+                                                  },
+                                                  child: const Text('Eliminar'),
+                                                ),
+                                              ]
+                                            );
+                                            }
+                                          );
+                                        },
+                                        child: CircleAvatar(
+                                          radius: 20,
+                                          backgroundColor: Colors.white,
+                                          child: Icon(Icons.delete_rounded,
+                                              color: Colors.red[300]
+                                              //Color.fromARGB(255, 239, 148, 94),
+                                              ),
                                         ),
                                       ),
-                                      SizedBox(width: 10),
+                                      const SizedBox(width: 10),
                                     ],
                                   ),
                                   const SizedBox(height: 10),
