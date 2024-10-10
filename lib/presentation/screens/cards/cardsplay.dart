@@ -40,24 +40,23 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
   }
 
   // Método para obtener las tarjetas de la subcolección 'cards'
-  Future<List<Map<String, dynamic>>> _fetchCategoriaCards() async {
+  Stream<List<Map<String, dynamic>>> _categoriaCardsStream() {
     // Accede a la subcolección 'cards' dentro del documento de la categoría seleccionada
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+    return FirebaseFirestore.instance
         .collection('users') // Colección de usuarios
-        .doc(user!.uid) // Usa el UID del usuario
+        .doc(user.uid) // Usa el UID del usuario
         .collection('categories') // Subcolección de categorías del usuario
         .doc(widget.categoriaId) // Documento de la categoría seleccionada
-        .collection('cards') // Nombre de la subcolección
-        .get();
-
-    // Convierte los documentos en una lista de Mapas, incluyendo el ID del documento
-    return querySnapshot.docs.map((doc) {
-      // Extrae los datos del documento
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      // Añade manualmente el ID del documento al mapa de datos
-      data['id'] = doc.id;
-      return data;
-    }).toList();
+        .collection('cards') // Subcolección de 'cards'
+        .snapshots() // Obtiene el stream de cambios en tiempo real
+        .map((querySnapshot) {
+      // Convierte los documentos en una lista de Mapas, incluyendo el ID del documento
+      return querySnapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id; // Añade el ID del documento
+        return data;
+      }).toList();
+    });
   }
 
   // Método para formatear el tiempo en minutos y segundos
@@ -70,14 +69,14 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
   // Método para obtener el nombre de la categoría
   Future<String> _fetchCategoryName() async {
     DocumentSnapshot docSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
         .collection('categories')
         .doc(widget.categoriaId)
         .get();
 
-    // Asegúrate de que el documento tenga el campo 'nombre'
     final data = docSnapshot.data() as Map<String, dynamic>?;
-    return data?['nombre'] ??
-        'Sin nombre'; // Devolver un nombre predeterminado si no existe
+    return data?['nombre'] ?? 'Sin nombre'; // Devolver un nombre predeterminado si no existe
   }
 
   @override
@@ -100,8 +99,8 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
           },
         ),
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchCategoriaCards(),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _categoriaCardsStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -175,8 +174,7 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
                         padding: const EdgeInsets.all(8.0),
                         child: SlimyCard(
                           topCardWidget: Padding(
-                            padding: const EdgeInsets.only(
-                                top: 5, left: 18, right: 8),
+                            padding: const EdgeInsets.only(top: 5, left: 18, right: 8),
                             child: Column(
                               children: [
                                 Row(
@@ -192,8 +190,7 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
                                         radius: 20,
                                         backgroundColor: Colors.white,
                                         child: Icon(Icons.border_color_rounded,
-                                            color: Color.fromARGB(
-                                                255, 239, 148, 94)),
+                                            color: Color.fromARGB(255, 239, 148, 94)),
                                       ),
                                     ),
                                     SizedBox(width: 10),
@@ -209,8 +206,7 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
                           ),
                           bottomCardWidget: Text(
                             card['titulo'] ?? 'Sin título',
-                            style: const TextStyle(
-                                fontSize: 24, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                           color: const Color(0xFFF2F0EB),
                         ),
