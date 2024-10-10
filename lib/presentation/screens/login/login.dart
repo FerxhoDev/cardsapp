@@ -21,25 +21,44 @@ class _LoginState extends State<Login> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  Future signIn() async {
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text, password: _passwordController.text);
-      context.go('/home');
-      ScaffoldMessenger.of(context).showSnackBar(
+  Future login() async {
+  try {
+    UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+
+    if (userCredential.user != null && !userCredential.user!.emailVerified) {
+      await userCredential.user!.sendEmailVerification();
+      
+      // Verifica si el widget sigue montado antes de mostrar el ScaffoldMessenger
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, verifica tu correo. Se ha reenviado un correo de verificación.')),
+        );
+      }
+    } else {
+      // Redirigir a la pantalla de Home si el correo ya está verificado
+      if (mounted) {
+        context.go('/Home');
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Inicio de sesión correcto.'),
           ),
         );
-      //GoRouter.of(context).go('/home');
-    } on FirebaseAuthException catch (e) { 
-      if (e.code == 'user-not-found') {
+      }
+    }
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'user-not-found') {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('No hay usuario para este correo.'),
           ),
         );
-      } else if (e.code == 'wrong-password') {
+      }
+    } else if (e.code == 'wrong-password') {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Contraseña incorrecta.'),
@@ -48,6 +67,8 @@ class _LoginState extends State<Login> {
       }
     }
   }
+}
+
 
 
   @override
@@ -170,7 +191,7 @@ class _LoginState extends State<Login> {
                             color: Colors.teal[200],
                             child: InkWell(
                               onTap: () {
-                                signIn();
+                                login();
                               },
                               child: Padding(
                                 padding: EdgeInsets.symmetric(

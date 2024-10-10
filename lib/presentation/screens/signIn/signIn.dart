@@ -22,7 +22,8 @@ class _LoginState extends State<Signin> {
 
 
    // Función para registrar un nuevo usuario
-  Future<void> _register() async {
+  // Función para registrar un nuevo usuario con verificación de correo
+Future<void> _register() async {
   try {
     // Registrar un nuevo usuario
     UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
@@ -33,24 +34,23 @@ class _LoginState extends State<Signin> {
     // Actualizar el nombre de usuario
     await userCredential.user!.updateDisplayName(_nameController.text.trim());
 
-    // Recargar la información del usuario para asegurarte de que se reflejan los cambios
-    await userCredential.user!.reload();
-    User? updatedUser = _auth.currentUser;
+    // Enviar correo de verificación
+    await userCredential.user!.sendEmailVerification();
 
     // Guardar el nombre de usuario y correo en Firestore
-    await FirebaseFirestore.instance.collection('users').doc(updatedUser!.uid).set({
+    await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
       'name': _nameController.text.trim(),
       'email': _emailController.text.trim(),
     });
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registro exitoso')),
+        const SnackBar(content: Text('Registro exitoso. Verifica tu correo antes de iniciar sesión.')),
       );
     }
 
-    // Redirigir a la pantalla de Home
-    context.go('/Home/');
+    // Redirigir al usuario a la pantalla de inicio o login
+    context.goNamed('verifyEmail');
   } catch (e) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -59,6 +59,7 @@ class _LoginState extends State<Signin> {
     }
   }
 }
+
 
 
 

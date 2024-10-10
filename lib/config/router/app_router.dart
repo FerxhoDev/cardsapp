@@ -32,6 +32,13 @@ GoRouter appRouter(bool introShown) {
               path: 'signIn',
               name: 'signIn',
               builder: (BuildContext context, GoRouterState state) => const Signin(),
+              routes: <RouteBase>[
+                GoRoute(
+                  path: 'verifyEmail',
+                  name: 'verifyEmail',
+                  builder: (BuildContext context, GoRouterState state) => const Signin(),
+                ),
+              ]
             ),
            ]
           ),
