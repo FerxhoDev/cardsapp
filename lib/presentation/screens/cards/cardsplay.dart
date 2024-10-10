@@ -47,7 +47,8 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
         .doc(user.uid) // Usa el UID del usuario
         .collection('categories') // Subcolección de categorías del usuario
         .doc(widget.categoriaId) // Documento de la categoría seleccionada
-        .collection('cards') // Subcolección de 'cards'
+        .collection('cards')
+        .orderBy('timestamp', descending: true) // Subcolección de 'cards'
         .snapshots() // Obtiene el stream de cambios en tiempo real
         .map((querySnapshot) {
       // Convierte los documentos en una lista de Mapas, incluyendo el ID del documento

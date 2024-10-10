@@ -71,6 +71,7 @@ class _AddCatmodState extends State<AddCatmod> {
         .add({
       'titulo': _cardTitleController.text,
       'detalle': _detalleTitleController.text,
+      'timestamp': FieldValue.serverTimestamp(),
       // Otros campos para la tarjeta
     });
 
