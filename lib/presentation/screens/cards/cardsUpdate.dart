@@ -115,7 +115,6 @@ User user = FirebaseAuth.instance.currentUser!; // Usuario actual
                   padding: const EdgeInsets.only(top: 15.0, left: 5.0, right: 5.0, bottom: 5.0),
                   child: TextField(
                     controller: _tituloController,
-                    
                     decoration: InputDecoration(
                       labelText: 'Título',
                       labelStyle: TextStyle(color: Colors.teal[800], fontWeight: FontWeight.bold),

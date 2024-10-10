@@ -35,7 +35,7 @@ Future<void> _register() async {
     await userCredential.user!.updateDisplayName(_nameController.text.trim());
 
     // Enviar correo de verificación
-    await userCredential.user!.sendEmailVerification();
+    //await userCredential.user!.sendEmailVerification();
 
     // Guardar el nombre de usuario y correo en Firestore
     await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cardsapps/presentation/screens/cards/addCArdModal.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,7 +17,6 @@ class CategoriaDetallesPage extends StatefulWidget {
 }
 
 class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
-
   User user = FirebaseAuth.instance.currentUser!; // Usuario actual
   late Timer _timer;
   ValueNotifier<int> _seconds = ValueNotifier<int>(
@@ -41,24 +41,24 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
 
   // Método para obtener las tarjetas de la subcolección 'cards'
   Future<List<Map<String, dynamic>>> _fetchCategoriaCards() async {
-  // Accede a la subcolección 'cards' dentro del documento de la categoría seleccionada
-  QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-      .collection('users') // Colección de usuarios
-      .doc(user!.uid) // Usa el UID del usuario
-      .collection('categories') // Subcolección de categorías del usuario
-      .doc(widget.categoriaId) // Documento de la categoría seleccionada
-      .collection('cards') // Nombre de la subcolección
-      .get();
+    // Accede a la subcolección 'cards' dentro del documento de la categoría seleccionada
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('users') // Colección de usuarios
+        .doc(user!.uid) // Usa el UID del usuario
+        .collection('categories') // Subcolección de categorías del usuario
+        .doc(widget.categoriaId) // Documento de la categoría seleccionada
+        .collection('cards') // Nombre de la subcolección
+        .get();
 
-  // Convierte los documentos en una lista de Mapas, incluyendo el ID del documento
-  return querySnapshot.docs.map((doc) {
-    // Extrae los datos del documento
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    // Añade manualmente el ID del documento al mapa de datos
-    data['id'] = doc.id;
-    return data;
-  }).toList();
-}
+    // Convierte los documentos en una lista de Mapas, incluyendo el ID del documento
+    return querySnapshot.docs.map((doc) {
+      // Extrae los datos del documento
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      // Añade manualmente el ID del documento al mapa de datos
+      data['id'] = doc.id;
+      return data;
+    }).toList();
+  }
 
   // Método para formatear el tiempo en minutos y segundos
   String _formatTime(int seconds) {
@@ -185,7 +185,8 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
                                     GestureDetector(
                                       onTap: () {
                                         // Navegamos pasando tanto categoriaId como cardId en la ruta
-                                        context.go('/Home/updateCategoria/${widget.categoriaId}/${card['id']}'); 
+                                        context.go(
+                                            '/Home/updateCategoria/${widget.categoriaId}/${card['id']}');
                                       },
                                       child: const CircleAvatar(
                                         radius: 20,
@@ -221,6 +222,17 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
             ),
           );
         },
+      ),
+      floatingActionButton: ElevatedButton.icon(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (ctx) => AddCardmod(categoryId: widget.categoriaId),
+            isScrollControlled: true
+          );
+        },
+        label: const Text('Añadir Tarjeta'),
+        icon: const Icon(Icons.add),
       ),
     );
   }
