@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:slimy_card_plus/slimy_card.dart';
 
@@ -80,6 +81,16 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
     return data?['nombre'] ?? 'Sin nombre'; // Devolver un nombre predeterminado si no existe
   }
 
+  // actualizar nombre de la categoría
+  Future<void> _updateCategoryName(String newName) async {
+  await FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .collection('categories')
+      .doc(widget.categoriaId)
+      .update({'nombre': newName});
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,6 +110,50 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
             }
           },
         ),
+        actions: [
+          IconButton(
+  icon: const Icon(Icons.border_color_rounded),
+  onPressed: () {
+    // Muestra un cuadro de diálogo para actualizar el nombre de la categoría
+    showDialog(
+      context: context,
+      builder: (context) {
+        // Controlador para el campo de texto
+        TextEditingController _nameController = TextEditingController();
+
+        return AlertDialog(
+          title: Text('Editar nombre de la categoría', style: TextStyle(fontSize: 30.sp),),
+          content: TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(hintText: 'Ingrese nuevo nombre'),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Cierra el diálogo
+              },
+            ),
+            TextButton(
+              child: const Text('Guardar'),
+              onPressed: () {
+                String newName = _nameController.text;
+                if (newName.isNotEmpty) {
+                  _updateCategoryName(newName).then((_) {
+                    // Actualiza el UI llamando al setState
+                    setState(() {});
+                    Navigator.of(context).pop(); // Cierra el diálogo
+                  });
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  },
+),
+        ],
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _categoriaCardsStream(),
@@ -241,7 +296,6 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
                                       ),
                                     ),
                                     ),
-                                    const SizedBox(width: 8),
                                   ],
                                 ),
                                 const SizedBox(height: 10),
