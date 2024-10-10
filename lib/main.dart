@@ -27,8 +27,6 @@ class MyApp extends StatelessWidget {
         return MaterialApp.router(
           debugShowCheckedModeBanner: false,
           theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: ThemeMode.system,
           routerConfig: appRouter(introShown),
           title: 'Cards App',
         );
