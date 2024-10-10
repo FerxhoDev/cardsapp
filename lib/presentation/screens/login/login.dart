@@ -182,6 +182,17 @@ class _LoginState extends State<Login> {
                       ),
                     ),
                     SizedBox(height: 30.h),
+                    GestureDetector(
+                      onTap: () {
+                        // Navegar a la pantalla de recuperar contraseña
+                        context.goNamed('forgotpassword');
+                      },
+                      child: const Text(
+                        'Olvidaste tu contraseña?',
+                        style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    SizedBox(height: 30.h),
                     
                     Padding(
                         padding: EdgeInsets.symmetric(horizontal: 100.w),
@@ -200,7 +211,7 @@ class _LoginState extends State<Login> {
                                 ),
                                 child: Center(
                                   child: Text(
-                                    'Registrarme',
+                                    'Iniciar Sesión',
                                     style: TextStyle(
                                       fontSize: 35.sp,
                                       fontWeight: FontWeight.bold,

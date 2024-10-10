@@ -2,6 +2,7 @@ import 'package:cardsapps/presentation/screens/Home/homescreen.dart';
 import 'package:cardsapps/presentation/screens/PageView/pageView.dart';
 import 'package:cardsapps/presentation/screens/cards/cardsUpdate.dart';
 import 'package:cardsapps/presentation/screens/cards/cardsplay.dart';
+import 'package:cardsapps/presentation/screens/forgotpassword/forgotpassword.dart';
 import 'package:cardsapps/presentation/screens/login/login.dart';
 import 'package:cardsapps/presentation/screens/signIn/signIn.dart';
 import 'package:flutter/material.dart';
@@ -28,6 +29,13 @@ GoRouter appRouter(bool introShown) {
            builder: (BuildContext context, GoRouterState state) => const Login(),
 
            routes: <RouteBase>[
+            GoRoute(
+              path: 'forgotpassword',
+              name: 'forgotpassword',
+              builder: (BuildContext context, GoRouterState state) {
+                return const ForgotMyPassword();
+              },
+            ),
             GoRoute(
               path: 'signIn',
               name: 'signIn',

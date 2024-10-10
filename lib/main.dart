@@ -1,5 +1,4 @@
 import 'package:cardsapps/config/router/app_router.dart';
-import 'package:cardsapps/config/theme/dark_theme.dart';
 import 'package:cardsapps/config/theme/light_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
