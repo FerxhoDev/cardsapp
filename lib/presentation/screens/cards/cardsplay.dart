@@ -181,6 +181,7 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
                                 Row(
                                   children: [
                                     const Spacer(),
+
                                     GestureDetector(
                                       onTap: () {
                                         // Navegamos pasando tanto categoriaId como cardId en la ruta
@@ -195,6 +196,52 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
                                       ),
                                     ),
                                     SizedBox(width: 10),
+                                    GestureDetector(
+                                      onTap: () {
+                                        showDialog(
+                                              context: context,
+                                              builder: (BuildContext context){
+                                                return AlertDialog(
+                                                  title: const Text(
+                                                    'Eliminar Tarjeta'),
+                                                    content: const Text(
+                                                      '¿Estás seguro de eliminar la Tarjeta?'),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: const Text('Cancelar'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                    // Eliminar la tarjeta de la subcolección 'cards'
+                                        FirebaseFirestore.instance
+                                            .collection('users')
+                                            .doc(user.uid)
+                                            .collection('categories')
+                                            .doc(widget.categoriaId)
+                                            .collection('cards')
+                                            .doc(card['id'])
+                                            .delete();
+                                                  },
+                                                  child: const Text('Eliminar'),
+                                                ),
+                                              ]
+                                            );
+                                            }
+                                          );                                     
+                                      },
+                                      child: CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: Colors.white,
+                                        child: Icon(Icons.delete_rounded,
+                                            color: Colors.red[400],
+                                      ),
+                                    ),
+                                    ),
+                                    const SizedBox(width: 8),
                                   ],
                                 ),
                                 const SizedBox(height: 10),
