@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -68,34 +69,41 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _logout(BuildContext context) async {
-    if (FirebaseAuth.instance.currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No hay ningún usuario logueado.'),
-        ),
-      );
-      return; // Salir de la función si no hay usuario logueado
-    }
-
-    try {
-      await FirebaseAuth.instance.signOut(); // Cierra la sesión de Firebase
-
-      // Después de cerrar sesión, redirige al login
-      context.go('/Home/login');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sesión cerrada correctamente.'),
-        ),
-      );
-    } catch (e) {
-      // Manejo de errores
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al cerrar sesión: $e'),
-        ),
-      );
-    }
+  if (FirebaseAuth.instance.currentUser == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('No hay ningún usuario logueado.'),
+      ),
+    );
+    return; // Salir de la función si no hay usuario logueado
   }
+
+  try {
+    // Desconectar la cuenta de Google solo si el usuario está logueado con Google
+    if (FirebaseAuth.instance.currentUser?.providerData.any((provider) => provider.providerId == 'google.com') ?? false) {
+      await GoogleSignIn().disconnect();
+    }
+    
+    // Cierra la sesión de Firebase
+    await FirebaseAuth.instance.signOut();
+
+    // Después de cerrar sesión, redirige al login
+    context.go('/Home/login');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sesión cerrada correctamente.'),
+      ),
+    );
+  } catch (e) {
+    // Manejo de errores
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error al cerrar sesión: $e'),
+      ),
+    );
+  }
+}
+
 
   // Stream para obtener las categorías del usuario logueado
 // Stream para obtener las categorías del usuario autenticado
