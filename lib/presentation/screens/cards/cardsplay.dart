@@ -23,6 +23,34 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
   ValueNotifier<int> _seconds = ValueNotifier<int>(
       0); // Tiempo transcurrido en segundos con ValueNotifier
 
+List<Map<String, dynamic>> _cards = [];
+
+Future<void> _loadCards() async {
+  try {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('categories')
+        .doc(widget.categoriaId)
+        .collection('cards')
+        .get();
+
+    final cardsList = snapshot.docs.map((doc) {
+      return {
+        'id': doc.id,
+        'titulo': doc['titulo'],
+        'detalle': doc['detalle'],
+      };
+    }).toList();
+
+    setState(() {
+      _cards = cardsList;
+    });
+  } catch (e) {
+    print('Error al cargar las cartas: $e');
+  }
+}
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +58,7 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _seconds.value++; // Actualiza el tiempo sin redibujar todo el Widget
     });
+     _loadCards();  // Carga las cartas al iniciar la pantalla
   }
 
   @override
@@ -224,11 +253,13 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.all(20.0),
                     itemCount: cards.length,
-                    itemBuilder: (context, index) {
+                    itemBuilder: (context, index) {                 
                       final card = cards[index];
+                      print(card);
                       return Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: SlimyCard(
+                          
                           topCardWidget: Padding(
                             padding: const EdgeInsets.only(top: 5, left: 18, right: 8),
                             child: Column(
@@ -299,6 +330,7 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 10),
+                                
                                 Text(
                                   card['detalle'] ?? 'Sin detalles',
                                   style: const TextStyle(fontSize: 18),
@@ -327,7 +359,9 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
             context: context,
             builder: (ctx) => AddCardmod(categoryId: widget.categoriaId),
             isScrollControlled: true
-          );
+          ).then((_) {
+            setState(() {});  // Forzar la actualización del estado
+          });
         },
         label: const Text('Añadir Tarjeta'),
         icon: const Icon(Icons.add),
