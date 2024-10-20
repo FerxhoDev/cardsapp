@@ -23,33 +23,33 @@ class _CategoriaDetallesPageState extends State<CategoriaDetallesPage> {
   ValueNotifier<int> _seconds = ValueNotifier<int>(
       0); // Tiempo transcurrido en segundos con ValueNotifier
 
-List<Map<String, dynamic>> _cards = [];
+  List<Map<String, dynamic>> _cards = [];
 
-Future<void> _loadCards() async {
-  try {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('categories')
-        .doc(widget.categoriaId)
-        .collection('cards')
-        .get();
+  Future<void> _loadCards() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('categories')
+          .doc(widget.categoriaId)
+          .collection('cards')
+          .get();
 
-    final cardsList = snapshot.docs.map((doc) {
-      return {
-        'id': doc.id,
-        'titulo': doc['titulo'],
-        'detalle': doc['detalle'],
-      };
-    }).toList();
+      final cardsList = snapshot.docs.map((doc) {
+        return {
+          'id': doc.id,
+          'titulo': doc['titulo'],
+          'detalle': doc['detalle'],
+        };
+      }).toList();
 
-    setState(() {
-      _cards = cardsList;
-    });
-  } catch (e) {
-    print('Error al cargar las cartas: $e');
+      setState(() {
+        _cards = cardsList;
+      });
+    } catch (e) {
+      print('Error al cargar las cartas: $e');
+    }
   }
-}
 
   @override
   void initState() {
@@ -58,7 +58,7 @@ Future<void> _loadCards() async {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _seconds.value++; // Actualiza el tiempo sin redibujar todo el Widget
     });
-     _loadCards();  // Carga las cartas al iniciar la pantalla
+    _loadCards(); // Carga las cartas al iniciar la pantalla
   }
 
   @override
@@ -107,18 +107,19 @@ Future<void> _loadCards() async {
         .get();
 
     final data = docSnapshot.data() as Map<String, dynamic>?;
-    return data?['nombre'] ?? 'Sin nombre'; // Devolver un nombre predeterminado si no existe
+    return data?['nombre'] ??
+        'Sin nombre'; // Devolver un nombre predeterminado si no existe
   }
 
   // actualizar nombre de la categoría
   Future<void> _updateCategoryName(String newName) async {
-  await FirebaseFirestore.instance
-      .collection('users')
-      .doc(user.uid)
-      .collection('categories')
-      .doc(widget.categoriaId)
-      .update({'nombre': newName});
-}
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('categories')
+        .doc(widget.categoriaId)
+        .update({'nombre': newName});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -141,47 +142,52 @@ Future<void> _loadCards() async {
         ),
         actions: [
           IconButton(
-  icon: const Icon(Icons.border_color_rounded),
-  onPressed: () {
-    // Muestra un cuadro de diálogo para actualizar el nombre de la categoría
-    showDialog(
-      context: context,
-      builder: (context) {
-        // Controlador para el campo de texto
-        TextEditingController _nameController = TextEditingController();
+            icon: const Icon(Icons.border_color_rounded),
+            onPressed: () {
+              // Muestra un cuadro de diálogo para actualizar el nombre de la categoría
+              showDialog(
+                context: context,
+                builder: (context) {
+                  // Controlador para el campo de texto
+                  TextEditingController _nameController =
+                      TextEditingController();
 
-        return AlertDialog(
-          title: Text('Editar nombre de la categoría', style: TextStyle(fontSize: 30.sp),),
-          content: TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(hintText: 'Ingrese nuevo nombre'),
+                  return AlertDialog(
+                    title: Text(
+                      'Editar nombre de la categoría',
+                      style: TextStyle(fontSize: 30.sp),
+                    ),
+                    content: TextField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                          hintText: 'Ingrese nuevo nombre'),
+                    ),
+                    actions: [
+                      TextButton(
+                        child: const Text('Cancelar'),
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Cierra el diálogo
+                        },
+                      ),
+                      TextButton(
+                        child: const Text('Guardar'),
+                        onPressed: () {
+                          String newName = _nameController.text;
+                          if (newName.isNotEmpty) {
+                            _updateCategoryName(newName).then((_) {
+                              // Actualiza el UI llamando al setState
+                              setState(() {});
+                              Navigator.of(context).pop(); // Cierra el diálogo
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
           ),
-          actions: [
-            TextButton(
-              child: const Text('Cancelar'),
-              onPressed: () {
-                Navigator.of(context).pop(); // Cierra el diálogo
-              },
-            ),
-            TextButton(
-              child: const Text('Guardar'),
-              onPressed: () {
-                String newName = _nameController.text;
-                if (newName.isNotEmpty) {
-                  _updateCategoryName(newName).then((_) {
-                    // Actualiza el UI llamando al setState
-                    setState(() {});
-                    Navigator.of(context).pop(); // Cierra el diálogo
-                  });
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  },
-),
         ],
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
@@ -253,21 +259,20 @@ Future<void> _loadCards() async {
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.all(20.0),
                     itemCount: cards.length,
-                    itemBuilder: (context, index) {                 
+                    itemBuilder: (context, index) {
                       final card = cards[index];
                       print(card);
                       return Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: SlimyCard(
-                          
                           topCardWidget: Padding(
-                            padding: const EdgeInsets.only(top: 5, left: 18, right: 8),
+                            padding: const EdgeInsets.only(
+                                top: 5, left: 18, right: 8),
                             child: Column(
                               children: [
                                 Row(
                                   children: [
                                     const Spacer(),
-
                                     GestureDetector(
                                       onTap: () {
                                         // Navegamos pasando tanto categoriaId como cardId en la ruta
@@ -278,59 +283,67 @@ Future<void> _loadCards() async {
                                         radius: 20,
                                         backgroundColor: Colors.white,
                                         child: Icon(Icons.border_color_rounded,
-                                            color: Color.fromARGB(255, 239, 148, 94)),
+                                            color: Color.fromARGB(
+                                                255, 239, 148, 94)),
                                       ),
                                     ),
                                     SizedBox(width: 10),
                                     GestureDetector(
                                       onTap: () {
                                         showDialog(
-                                              context: context,
-                                              builder: (BuildContext context){
-                                                return AlertDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
                                                   title: const Text(
-                                                    'Eliminar Tarjeta'),
-                                                    content: const Text(
+                                                      'Eliminar Tarjeta'),
+                                                  content: const Text(
                                                       '¿Estás seguro de eliminar la Tarjeta?'),
-                                              actions: <Widget>[
-                                                TextButton(
-                                                  onPressed: () {
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                  child: const Text('Cancelar'),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () {
-                                                    Navigator.of(context).pop();
-                                                    // Eliminar la tarjeta de la subcolección 'cards'
-                                        FirebaseFirestore.instance
-                                            .collection('users')
-                                            .doc(user.uid)
-                                            .collection('categories')
-                                            .doc(widget.categoriaId)
-                                            .collection('cards')
-                                            .doc(card['id'])
-                                            .delete();
-                                                  },
-                                                  child: const Text('Eliminar'),
-                                                ),
-                                              ]
-                                            );
-                                            }
-                                          );                                     
+                                                  actions: <Widget>[
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: const Text(
+                                                          'Cancelar'),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        // Eliminar la tarjeta de la subcolección 'cards'
+                                                        FirebaseFirestore
+                                                            .instance
+                                                            .collection('users')
+                                                            .doc(user.uid)
+                                                            .collection(
+                                                                'categories')
+                                                            .doc(widget
+                                                                .categoriaId)
+                                                            .collection('cards')
+                                                            .doc(card['id'])
+                                                            .delete();
+                                                      },
+                                                      child: const Text(
+                                                          'Eliminar'),
+                                                    ),
+                                                  ]);
+                                            }).then((_) {
+                                              setState(() {}); // Forzar la actualización del estado
+                                         });
                                       },
                                       child: CircleAvatar(
                                         radius: 20,
                                         backgroundColor: Colors.white,
-                                        child: Icon(Icons.delete_rounded,
-                                            color: Colors.red[400],
+                                        child: Icon(
+                                          Icons.delete_rounded,
+                                          color: Colors.red[400],
+                                        ),
                                       ),
-                                    ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 10),
-                                
                                 Text(
                                   card['detalle'] ?? 'Sin detalles',
                                   style: const TextStyle(fontSize: 18),
@@ -340,7 +353,8 @@ Future<void> _loadCards() async {
                           ),
                           bottomCardWidget: Text(
                             card['titulo'] ?? 'Sin título',
-                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                           color: const Color(0xFFF2F0EB),
                         ),
@@ -356,11 +370,11 @@ Future<void> _loadCards() async {
       floatingActionButton: ElevatedButton.icon(
         onPressed: () {
           showModalBottomSheet(
-            context: context,
-            builder: (ctx) => AddCardmod(categoryId: widget.categoriaId),
-            isScrollControlled: true
-          ).then((_) {
-            setState(() {});  // Forzar la actualización del estado
+                  context: context,
+                  builder: (ctx) => AddCardmod(categoryId: widget.categoriaId),
+                  isScrollControlled: true)
+              .then((_) {
+            setState(() {}); // Forzar la actualización del estado
           });
         },
         label: const Text('Añadir Tarjeta'),
