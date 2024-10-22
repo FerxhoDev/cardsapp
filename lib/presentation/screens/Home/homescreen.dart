@@ -75,6 +75,7 @@ class _HomePageState extends State<HomePage> {
         content: Text('No hay ningún usuario logueado.'),
       ),
     );
+    
     return; // Salir de la función si no hay usuario logueado
   }
 
@@ -252,7 +253,12 @@ class _HomePageState extends State<HomePage> {
                         IconButton(
                           onPressed: () async {
                             await _logout(
-                                context); // Llama a la función de logout de manera correcta
+                                context).then((_) {
+                                              setState(() {
+                                                _allResults = []; // Limpiar la lista de categorías
+                                                _resultsList = []; // Limpiar los resultados de búsqueda
+                                              }); // Forzar la actualización del estado
+                                         }); // Llama a la función de logout de manera correcta
                           },
                           icon: const Icon(Icons.logout_rounded),
                         ),
@@ -324,6 +330,11 @@ class _HomePageState extends State<HomePage> {
                 StreamBuilder<QuerySnapshot>(
                   stream: getClientStream(),
                   builder: (context, snapshot) {
+                    if (user == null) {
+                    // Si el usuario ha cerrado sesión, muestra un mensaje o nada
+                    return const Center(child: Text('Por favor inicia sesión para ver tus categorías', style: TextStyle(color: Colors.teal),));
+                    }
+
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
