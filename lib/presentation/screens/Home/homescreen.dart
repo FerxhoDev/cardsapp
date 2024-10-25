@@ -21,8 +21,6 @@ class _HomePageState extends State<HomePage> {
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchFocused = false;
 
-  //final User? user = FirebaseAuth.instance.currentUser;
-  //final FirebaseAuth _auth = FirebaseAuth.instance;
 
   User? user;
   String? userName;
@@ -105,8 +103,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-
-  // Stream para obtener las categorías del usuario logueado
 // Stream para obtener las categorías del usuario autenticado
   Stream<QuerySnapshot> getClientStream() {
     // Obtén el usuario actual
@@ -126,13 +122,6 @@ class _HomePageState extends State<HomePage> {
         .snapshots(); // Escucha los cambios en tiempo real
   }
 
-  // Stream para obtener los datos en tiempo real
-  /*Stream<QuerySnapshot> getClientStream() {
-    return FirebaseFirestore.instance
-        .collection('categories')
-        .orderBy('timestamp', descending: true)
-        .snapshots();
-  }*/
 
 // Función para actualizar el nombre de usuario
   Future<void> _updateUserName() async {
@@ -149,19 +138,27 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<String?> getUserName() async {
-    if (user == null) return null; // Si no hay usuario, retorna null
-    DocumentSnapshot userDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user!.uid)
-        .get();
+  if (user == null) return null; // Si no hay usuario, retorna null
+  
+  DocumentSnapshot userDoc = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(user!.uid)
+      .get();
 
-    if (userDoc.exists && userDoc.data() != null) {
-      var data = userDoc.data() as Map<String, dynamic>;
-      return data.containsKey('name') ? data['name'] : 'Usuario';
+  if (userDoc.exists && userDoc.data() != null) {
+    var data = userDoc.data() as Map<String, dynamic>;
+    String name = data.containsKey('name') ? data['name'] : 'Usuario';
+
+    // Limitar el nombre a 15 caracteres y añadir "..." si es necesario
+    if (name.length > 15) {
+      return '${name.substring(0, 15)}...';
     }
-
-    return 'Usuario'; // Si no hay un nombre, usa un valor por defecto
+    return name;
   }
+
+  return 'Usuario'; // Si no hay un nombre, usa un valor por defecto
+}
+
 
   @override
   void dispose() {
@@ -317,12 +314,6 @@ class _HomePageState extends State<HomePage> {
                       Text('Categorías',
                           style: TextStyle(
                               fontSize: 30.sp, fontWeight: FontWeight.bold)),
-                      const Spacer(),
-                      Text('Ver todo',
-                          style: TextStyle(
-                              fontSize: 22.sp,
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),

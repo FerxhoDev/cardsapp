@@ -7,12 +7,25 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:362645339399:android:ff7f47b4b9451bd7d2d9a2",
+        "mobilesdk_app_id": "1:362645339399:android:c74dfc8de10c1bc8d2d9a2",
         "android_client_info": {
-          "package_name": "com.example.cardsapps"
+          "package_name": "com.compworld.cardsapps"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "362645339399-sr48eqk8uohr1k5opkgk8cs98g7sqmnr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.compworld.cardsapps",
+            "certificate_hash": "297749115bfb7f524ca24d98e5582027edf2db1c"
+          }
+        },
+        {
+          "client_id": "362645339399-q6867qed4u888c7smm0u33kumdkeid2j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAlFB5aqDxJ1QLTnYYIkzMale-7yOzO2sU"
@@ -20,7 +33,63 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "362645339399-q6867qed4u888c7smm0u33kumdkeid2j.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "362645339399-3uuemhadgjcf98ti61e6dt8tjoahcjdr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.cardsapps"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:362645339399:android:ff7f47b4b9451bd7d2d9a2",
+        "android_client_info": {
+          "package_name": "com.example.cardsapps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "362645339399-fj887iln1eceksf17768u7f5aqnv8ep7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cardsapps",
+            "certificate_hash": "297749115bfb7f524ca24d98e5582027edf2db1c"
+          }
+        },
+        {
+          "client_id": "362645339399-q6867qed4u888c7smm0u33kumdkeid2j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlFB5aqDxJ1QLTnYYIkzMale-7yOzO2sU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "362645339399-q6867qed4u888c7smm0u33kumdkeid2j.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "362645339399-3uuemhadgjcf98ti61e6dt8tjoahcjdr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.cardsapps"
+              }
+            }
+          ]
         }
       }
     }
