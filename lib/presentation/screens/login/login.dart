@@ -23,55 +23,62 @@ class _LoginState extends State<Login> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  Future login() async {
-    try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+  Future<void> login() async {
+  try {
+    UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Inicio de sesión correcto.'),
+        ),
       );
-
-      if (userCredential.user != null && !userCredential.user!.emailVerified) {
-        await userCredential.user!.sendEmailVerification();
-
-        // Verifica si el widget sigue montado antes de mostrar el ScaffoldMessenger
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    'Por favor, verifica tu correo. Se ha reenviado un correo de verificación.')),
-          );
-        }
-      } else {
-        // Redirigir a la pantalla de Home si el correo ya está verificado
-        if (mounted) {
-          context.go('/Home');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Inicio de sesión correcto.'),
-            ),
-          );
-        }
-      }
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No hay usuario para este correo.'),
-            ),
-          );
-        }
-      } else if (e.code == 'wrong-password') {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Contraseña incorrecta.'),
-            ),
-          );
-        }
-      }
+      context.go('/Home');
     }
+  } on FirebaseAuthException catch (e) {
+    if (!mounted) return;
+    
+    String errorMessage;
+    switch (e.code) {
+      case 'user-not-found':
+        errorMessage = 'No hay usuario para este correo.';
+        break;
+      case 'wrong-password':
+        errorMessage = 'Contraseña incorrecta.';
+        break;
+      case 'invalid-credential':
+        errorMessage = 'Las credenciales proporcionadas son incorrectas o han expirado.';
+        break;
+      case 'too-many-requests':
+        errorMessage = 'Demasiados intentos fallidos. Por favor, intente más tarde.';
+        break;
+      default:
+        errorMessage = 'Error de autenticación: ${e.message}';
+    }
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(errorMessage),
+        duration: Duration(seconds: 5),
+      ),
+    );
+  } catch (e) {
+    if (!mounted) return;
+    
+    print('Error inesperado: $e'); // Para depuración
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error inesperado. Por favor, intente de nuevo.'),
+        duration: Duration(seconds: 5),
+      ),
+    );
   }
+}
+
 
 //Login con google
   Future<void> signInWithGoogle() async {

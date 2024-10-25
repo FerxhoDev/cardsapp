@@ -335,7 +335,7 @@ class _HomePageState extends State<HomePage> {
                     }
 
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return const Text('No hay categorías disponibles');
+                      return const Center(child: Text('Aún no tienes categorías, prueba grear una nueva', style: TextStyle(color: Colors.teal),));
                     }
 
                     // Actualiza la lista _allResults sin usar setState dentro del StreamBuilder
