@@ -21,7 +21,6 @@ class _HomePageState extends State<HomePage> {
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchFocused = false;
 
-
   User? user;
   String? userName;
 
@@ -66,42 +65,74 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> _logout(BuildContext context) async {
-  if (FirebaseAuth.instance.currentUser == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('No hay ningún usuario logueado.'),
-      ),
-    );
-    
-    return; // Salir de la función si no hay usuario logueado
-  }
+  Future<void> eliminarCuenta() async {
+  final user = FirebaseAuth.instance.currentUser;
 
-  try {
-    // Desconectar la cuenta de Google solo si el usuario está logueado con Google
-    if (FirebaseAuth.instance.currentUser?.providerData.any((provider) => provider.providerId == 'google.com') ?? false) {
+  if (user != null) {
+    try {
+      // Elimina los datos del usuario en Firestore
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
+
+      // Elimina la cuenta en Firebase Authentication
+      await user.delete();
+
       await GoogleSignIn().disconnect();
-    }
-    
-    // Cierra la sesión de Firebase
-    await FirebaseAuth.instance.signOut();
+      
+      // Cierra la sesión después de eliminar la cuenta
+      await FirebaseAuth.instance.signOut();
 
-    // Después de cerrar sesión, redirige al login
-    context.go('/Home/login');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sesión cerrada correctamente.'),
-      ),
-    );
-  } catch (e) {
-    // Manejo de errores
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Error al cerrar sesión: $e'),
-      ),
-    );
+      
+
+      print("Cuenta eliminada y sesión cerrada correctamente.");
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        print("El usuario necesita volver a iniciar sesión para eliminar la cuenta.");
+        // Redirige al usuario para que vuelva a autenticarse
+      } else {
+        print("Error al eliminar la cuenta: ${e.message}");
+      }
+    }
   }
 }
+
+  Future<void> _logout(BuildContext context) async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No hay ningún usuario logueado.'),
+        ),
+      );
+
+      return; // Salir de la función si no hay usuario logueado
+    }
+
+    try {
+      // Desconectar la cuenta de Google solo si el usuario está logueado con Google
+      if (FirebaseAuth.instance.currentUser?.providerData
+              .any((provider) => provider.providerId == 'google.com') ??
+          false) {
+        await GoogleSignIn().disconnect();
+      }
+
+      // Cierra la sesión de Firebase
+      await FirebaseAuth.instance.signOut();
+
+      // Después de cerrar sesión, redirige al login
+      context.go('/Home/login');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sesión cerrada correctamente.'),
+        ),
+      );
+    } catch (e) {
+      // Manejo de errores
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cerrar sesión: $e'),
+        ),
+      );
+    }
+  }
 
 // Stream para obtener las categorías del usuario autenticado
   Stream<QuerySnapshot> getClientStream() {
@@ -122,7 +153,6 @@ class _HomePageState extends State<HomePage> {
         .snapshots(); // Escucha los cambios en tiempo real
   }
 
-
 // Función para actualizar el nombre de usuario
   Future<void> _updateUserName() async {
     if (user != null) {
@@ -138,27 +168,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<String?> getUserName() async {
-  if (user == null) return null; // Si no hay usuario, retorna null
-  
-  DocumentSnapshot userDoc = await FirebaseFirestore.instance
-      .collection('users')
-      .doc(user!.uid)
-      .get();
+    if (user == null) return null; // Si no hay usuario, retorna null
 
-  if (userDoc.exists && userDoc.data() != null) {
-    var data = userDoc.data() as Map<String, dynamic>;
-    String name = data.containsKey('name') ? data['name'] : 'Usuario';
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .get();
 
-    // Limitar el nombre a 15 caracteres y añadir "..." si es necesario
-    if (name.length > 15) {
-      return '${name.substring(0, 15)}...';
+    if (userDoc.exists && userDoc.data() != null) {
+      var data = userDoc.data() as Map<String, dynamic>;
+      String name = data.containsKey('name') ? data['name'] : 'Usuario';
+
+      // Limitar el nombre a 15 caracteres y añadir "..." si es necesario
+      if (name.length > 15) {
+        return '${name.substring(0, 15)}...';
+      }
+      return name;
     }
-    return name;
+
+    return 'Usuario'; // Si no hay un nombre, usa un valor por defecto
   }
-
-  return 'Usuario'; // Si no hay un nombre, usa un valor por defecto
-}
-
 
   @override
   void dispose() {
@@ -217,50 +246,83 @@ class _HomePageState extends State<HomePage> {
                       : 170
                           .h, // Ajusta la altura cuando el foco está en el campo de búsqueda
                   child: Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.only(
+                        left: 10, right: 20, top: 20, bottom: 20),
                     child: Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Hola,', style: TextStyle(fontSize: 20.sp)),
-                            FutureBuilder<String?>(
-                              future: getUserName(),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const Text('Cargando...');
-                                }
-                                return Text(
-                                  snapshot.data != null
-                                      ? '${snapshot.data} 👋'
-                                      : 'Usuario 👋',
-                                  style: TextStyle(
-                                      fontSize: 40.sp,
-                                      fontWeight: FontWeight.bold),
-                                );
-                              },
-                            ),
-                            /*Text(userName != null ? '$userName 👋' : 'Usuario 👋',
-                              style: TextStyle(fontSize: 40.sp, fontWeight: FontWeight.bold)
-                            ),*/
-                          ],
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () async {
-                            await _logout(
-                                context).then((_) {
-                                              setState(() {
-                                                _allResults = []; // Limpiar la lista de categorías
-                                                _resultsList = []; // Limpiar los resultados de búsqueda
-                                              }); // Forzar la actualización del estado
-                                         }); // Llama a la función de logout de manera correcta
-                          },
-                          icon: const Icon(Icons.logout_rounded),
-                        ),
-                      ],
-                    ),
+  children: [
+    if (user != null) // Verificar si el usuario está logueado
+      IconButton(
+        onPressed: () async {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Eliminar cuenta'),
+                content: const Text('¿Estás seguro de eliminar tu cuenta?'),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      eliminarCuenta();
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Eliminar'),
+                  ),
+                ],
+              );
+            },
+          );
+
+          await eliminarCuenta().then((_) {
+            setState(() {
+              _allResults = []; // Limpiar la lista de categorías
+              _resultsList = []; // Limpiar los resultados de búsqueda
+            });
+          });
+        },
+        icon: Icon(
+          Icons.delete_forever,
+          color: Colors.red,
+          size: 60.sp,
+        ),
+      ),
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Hola,', style: TextStyle(fontSize: 20.sp)),
+        FutureBuilder<String?>(
+          future: getUserName(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Text('Cargando...');
+            }
+            return Text(
+              snapshot.data != null ? '${snapshot.data} 👋' : 'Usuario 👋',
+              style: TextStyle(fontSize: 40.sp, fontWeight: FontWeight.bold),
+            );
+          },
+        ),
+      ],
+    ),
+    const Spacer(),
+    IconButton(
+      onPressed: () async {
+        await _logout(context).then((_) {
+          setState(() {
+            _allResults = []; // Limpiar la lista de categorías
+            _resultsList = []; // Limpiar los resultados de búsqueda
+          });
+        });
+      },
+      icon: const Icon(Icons.logout_rounded),
+    ),
+  ],
+),
                   ),
                 ),
                 AnimatedContainer(
@@ -322,8 +384,12 @@ class _HomePageState extends State<HomePage> {
                   stream: getClientStream(),
                   builder: (context, snapshot) {
                     if (user == null) {
-                    // Si el usuario ha cerrado sesión, muestra un mensaje o nada
-                    return const Center(child: Text('Por favor inicia sesión para ver tus categorías', style: TextStyle(color: Colors.teal),));
+                      // Si el usuario ha cerrado sesión, muestra un mensaje o nada
+                      return const Center(
+                          child: Text(
+                        'Por favor inicia sesión para ver tus categorías',
+                        style: TextStyle(color: Colors.teal),
+                      ));
                     }
 
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -335,7 +401,11 @@ class _HomePageState extends State<HomePage> {
                     }
 
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return const Center(child: Text('Aún no tienes categorías, prueba grear una nueva', style: TextStyle(color: Colors.teal),));
+                      return const Center(
+                          child: Text(
+                        'Aún no tienes categorías, prueba grear una nueva',
+                        style: TextStyle(color: Colors.teal),
+                      ));
                     }
 
                     // Actualiza la lista _allResults sin usar setState dentro del StreamBuilder
@@ -382,36 +452,41 @@ class _HomePageState extends State<HomePage> {
                                         onTap: () {
                                           showDialog(
                                               context: context,
-                                              builder: (BuildContext context){
+                                              builder: (BuildContext context) {
                                                 return AlertDialog(
-                                                  title: const Text(
-                                                    'Eliminar categoría'),
+                                                    title: const Text(
+                                                        'Eliminar categoría'),
                                                     content: const Text(
-                                                      '¿Estás seguro de eliminar la categoría?'),
-                                              actions: <Widget>[
-                                                TextButton(
-                                                  onPressed: () {
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                  child: const Text('Cancelar'),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () {
-                                                    Navigator.of(context).pop();
-                                                    FirebaseFirestore.instance
-                                                        .collection('users')
-                                                        .doc(user!.uid)
-                                                        .collection(
-                                                            'categories')
-                                                        .doc(categoria['id'])
-                                                        .delete();
-                                                  },
-                                                  child: const Text('Eliminar'),
-                                                ),
-                                              ]
-                                            );
-                                            }
-                                          );
+                                                        '¿Estás seguro de eliminar la categoría?'),
+                                                    actions: <Widget>[
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                        child: const Text(
+                                                            'Cancelar'),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          FirebaseFirestore
+                                                              .instance
+                                                              .collection(
+                                                                  'users')
+                                                              .doc(user!.uid)
+                                                              .collection(
+                                                                  'categories')
+                                                              .doc(categoria[
+                                                                  'id'])
+                                                              .delete();
+                                                        },
+                                                        child: const Text(
+                                                            'Eliminar'),
+                                                      ),
+                                                    ]);
+                                              });
                                         },
                                         child: CircleAvatar(
                                           radius: 20,
